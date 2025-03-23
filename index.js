@@ -31,18 +31,23 @@ wss.on("connection", (ws)=>{
     });
 
     ws.on("message", function incoming(message) {
-        const receivedMessage = message.toString();
-        let messageJson = JSON.parse(receivedMessage);
-
-        let messageString = JSON.stringify(messageJson);
-        console.log("Received message string:", messageString);
-        // Multicast the received message to all connected clients except the sender
-        clients.forEach(client => {
-            // if (client !== ws) {
-                client.send(messageString);
-
-            // }
-        });
+        try {
+            const receivedMessage = message.toString();
+            let messageJson = JSON.parse(receivedMessage);
+            console.log("Received message:", messageJson);
+            let messageString = JSON.stringify(messageJson);
+            // console.log("Received message string:", messageString);
+            // Multicast the received message to all connected clients except the sender
+            clients.forEach(client => {
+                // if (client !== ws) {
+                    client.send(messageString);
+    
+                // }
+            });
+            
+        } catch (error) {
+            console.log("Error parsing message to JSON");
+        }
 
     });
 
