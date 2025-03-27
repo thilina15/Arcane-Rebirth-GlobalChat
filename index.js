@@ -1,74 +1,34 @@
-const WebSocket = require("ws");
-// const exec = require("child_process").exec;
-// const {stdout} = require("process");
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const http = require('http');
+const connectDB = require('./config/db');
+const userRoutes = require('./routes/userRoutes');
+const WebSocketService = require('./services/websocket');
 
-const wss = new WebSocket.Server({port: 3333});
+const app = express();
+const server = http.createServer(app);
 
-// Array to store WebSocket connections representing each connected client
-const clients = [];
+// Initialize WebSocket service
+const wss = new WebSocketService(server);
 
-online_users = 0;
+// Connect to MongoDB
+connectDB();
 
-console.log("Arcane WS server is online");
+// Middleware
+app.use(cors());
+app.use(express.json());
 
-wss.on("connection", (ws)=>{
+// Routes
+app.use('/api/users', userRoutes);
 
-    console.log("New client connected");
+// Basic route
+app.get('/', (req, res) => {
+    res.json({ message: 'Welcome to Arcane Chat API' });
+});
 
-    online_users ++;
-
-    // Add the newly connected WebSocket to the list of connected clients
-    clients.push(ws);
-
-    ws.send("You are connected to the global server!");
-    ws.send("New online user count is " + online_users);
-
-    // Multicast the current user count message to all connected clients
-    clients.forEach(client => {
-        if (client !== ws) {
-            client.send("New client has connected, new online user count is " + online_users);
-        }
-    });
-
-    ws.on("message", function incoming(message) {
-        try {
-            const receivedMessage = message.toString();
-            let messageJson = JSON.parse(receivedMessage);
-            console.log("Received message:", messageJson);
-            let messageString = JSON.stringify(messageJson);
-            // console.log("Received message string:", messageString);
-            // Multicast the received message to all connected clients except the sender
-            clients.forEach(client => {
-                // if (client !== ws) {
-                    client.send(messageString);
-    
-                // }
-            });
-            
-        } catch (error) {
-            console.log("Error parsing message to JSON");
-        }
-
-    });
-
-    // Event handler for WebSocket connection close
-    ws.on("close", function close() {
-        console.log("Client disconnected");
-
-        online_users --;
-
-        // Remove the disconnected WebSocket from the list of connected clients
-        const index = clients.indexOf(ws);
-        if (index !== -1) {
-            clients.splice(index, 1);
-        }
-
-        // Multicast the current user count message to all connected clients
-        clients.forEach(client => {
-            if (client !== ws) {
-                client.send("Someone has diconnected, new online user count is " + online_users);
-            }
-        });
-
-    });
+// Start server
+const PORT = process.env.PORT || 3333;
+server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
