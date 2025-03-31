@@ -3,7 +3,11 @@ const express = require('express');
 const cors = require('cors');
 const http = require('http');
 const connectDB = require('./config/db');
-const userRoutes = require('./routes/userRoutes');
+const playerRoutes = require('./routes/playerRoutes');
+const heroRoutes = require('./routes/heroRoutes');
+const challengeRoutes = require('./routes/challengeRoutes');
+const playerHeroRoutes = require('./routes/playerHeroRoutes');
+const playerChallengeRoutes = require('./routes/playerChallengeRoutes');
 const WebSocketService = require('./services/websocket');
 
 const app = express();
@@ -20,11 +24,15 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/api/users', userRoutes);
+app.use('/api/players', playerRoutes);
+app.use('/api/heroes', heroRoutes);
+app.use('/api/challenges', challengeRoutes);
+app.use('/api/player-heroes', playerHeroRoutes);
+app.use('/api/player-challenges', playerChallengeRoutes);
 
 // Basic route
 app.get('/', (req, res) => {
-    res.json({ message: 'Welcome to Arcane Chat API' });
+    res.json({ message: 'Welcome to Arcane Rebirth Game Server API' });
 });
 
 // Start server
