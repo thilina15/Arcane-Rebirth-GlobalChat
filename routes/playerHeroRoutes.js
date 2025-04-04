@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const PlayerHero = require('../models/PlayerHero');
+const Player = require('../models/Player');
+const Hero = require('../models/Hero');
 
 // Get all player-hero combinations
 router.get('/', async (req, res) => {
@@ -31,9 +33,15 @@ router.get('/:id', async (req, res) => {
 
 // Create player-hero combination
 router.post('/', async (req, res) => {
+    const player = await Player.findOne({ playerId: req.body.playerId });
+    const hero = await Hero.findOne({ heroId: req.body.heroId });
+
+    if (!player || !hero) {
+        return res.status(404).json({ message: 'Player or Hero not found' });
+    }
     const playerHero = new PlayerHero({
-        hero: req.body.hero,
-        player: req.body.player,
+        hero: hero._id,
+        player: player._id,
         level: req.body.level || 1,
         unlockedAbilityIds: req.body.unlockedAbilityIds || [],
         equippedAbilityIds: req.body.equippedAbilityIds || [],
@@ -51,9 +59,18 @@ router.post('/', async (req, res) => {
 });
 
 // Update player-hero combination
-router.patch('/:id', async (req, res) => {
+router.patch('/', async (req, res) => {
     try {
-        const playerHero = await PlayerHero.findById(req.params.id);
+
+        // get player
+        const player = await Player.findOne({playerId:req.body.player})
+        const hero = await Hero.findOne({heroId:req.body.hero})
+
+        if(!player||!hero){
+            return res.status(404).json({ message: 'Player or Hero not found' });
+        }
+
+        const playerHero = await PlayerHero.findOne();
         if (!playerHero) {
             return res.status(404).json({ message: 'Player-Hero combination not found' });
         }

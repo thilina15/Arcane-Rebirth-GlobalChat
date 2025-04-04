@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const Player = require('../models/Player');
+const Avatar = require('../models/Avatar')
+const Frame = require('../models/Frame');
+const Guild = require('../models/Guild');
 
 // Get all players
 router.get('/', async (req, res) => {
@@ -35,16 +38,21 @@ router.get('/:id', async (req, res) => {
 
 // Create player
 router.post('/', async (req, res) => {
+
+    //  get default values......
+    const defaultAvatar = await Avatar.findOne({avatarId:"default-1"})
+    const defaultFrame = await Frame.findOne({frameId:"default-1"})
+    const defaultRank = 0
+    const defaultEXP = 0
+
     const player = new Player({
         playerId: req.body.playerId,
         name: req.body.name,
-        rank: req.body.rank,
         title: req.body.title,
-        guild: req.body.guild,
-        avatar: req.body.avatar,
-        frame: req.body.frame,
-        exp: req.body.exp || 0,
-        squadLeader: req.body.squadLeader
+        rank: defaultRank,
+        avatar: defaultAvatar._id,
+        frame: defaultFrame._id,
+        exp: defaultEXP
     });
 
     try {
@@ -58,21 +66,60 @@ router.post('/', async (req, res) => {
 // Update player
 router.patch('/:id', async (req, res) => {
     try {
-        const player = await Player.findById(req.params.id);
+        const player = await Player.findOne({playerId:req.params.id});
         if (!player) {
             return res.status(404).json({ message: 'Player not found' });
         }
-        
-        // Update fields if provided
-        if (req.body.name) player.name = req.body.name;
-        if (req.body.rank) player.rank = req.body.rank;
-        if (req.body.title) player.title = req.body.title;
-        if (req.body.guild) player.guild = req.body.guild;
-        if (req.body.avatar) player.avatar = req.body.avatar;
-        if (req.body.frame) player.frame = req.body.frame;
-        if (req.body.exp) player.exp = req.body.exp;
-        if (req.body.squadLeader) player.squadLeader = req.body.squadLeader;
-        
+
+        // update name..............
+        if(req.body.name){
+            player.name = req.body.name
+        }
+
+        // update rank
+        if(req.body.rank){
+            player.rank = req.body.rank
+        }
+
+        // update title
+        if(req.body.title){
+            player.title = req.body.title
+        }
+
+        // update guild
+        if(req.body.guild){
+            const guild = await Guild.findOne({guildId:req.body.guild})
+            if(guild){
+                player.guild = guild._id
+            }
+        }
+
+        // update avatar
+        if(req.body.avatar){
+            const avatar = await Avatar.findOne({avatarId:req.body.avatar})
+            if(avatar){
+                player.avatar = avatar._id
+            }
+        }
+
+        // update frame
+        if(req.body.frame){
+            const frame = await Frame.findOne({frameId:req.body.frame})
+            if(frame){
+                player.frame = frame._id
+            }
+        }
+
+        // update XP
+        if(req.body.exp){
+            player.exp = req.body.exp
+        }
+
+        // update squad leader
+        if(req.body.squadLeader){
+            player.squadLeader = req.body.squadLeader
+        }
+
         const updatedPlayer = await player.save();
         res.json(updatedPlayer);
     } catch (error) {

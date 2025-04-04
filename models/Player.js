@@ -13,8 +13,7 @@ const playerSchema = new mongoose.Schema({
     },
     rank: {
         type: String,
-        required: true,
-        enum: ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Master', 'Grandmaster']
+        required: false,
     },
     title: {
         type: String,
@@ -37,8 +36,7 @@ const playerSchema = new mongoose.Schema({
         default: 0
     },
     squadLeader: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Player'
+        type: String,
     },
     createdAt: {
         type: Date,
