@@ -2,157 +2,100 @@ const express = require('express');
 const router = express.Router();
 const PlayerHero = require('../models/PlayerHero');
 const Player = require('../models/Player');
-const Hero = require('../models/Hero');
 
-// Get all player-hero combinations
-router.get('/', async (req, res) => {
-    try {
-        const playerHeroes = await PlayerHero.find()
-            .populate('player', 'name rank')
-            .populate('hero', 'name');
-        res.json(playerHeroes);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
-
-// Get single player-hero combination
-router.get('/:id', async (req, res) => {
-    try {
-        const playerHero = await PlayerHero.findById(req.params.id)
-            .populate('player', 'name rank')
-            .populate('hero', 'name');
-        if (!playerHero) {
-            return res.status(404).json({ message: 'Player-Hero combination not found' });
-        }
-        res.json(playerHero);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
-
-// Create player-hero combination
-router.post('/', async (req, res) => {
-    const player = await Player.findOne({ playerId: req.body.playerId });
-    const hero = await Hero.findOne({ heroId: req.body.heroId });
-
-    if (!player || !hero) {
-        return res.status(404).json({ message: 'Player or Hero not found' });
-    }
-    const playerHero = new PlayerHero({
-        hero: hero._id,
-        player: player._id,
-        level: req.body.level || 1,
-        unlockedAbilityIds: req.body.unlockedAbilityIds || [],
-        equippedAbilityIds: req.body.equippedAbilityIds || [],
-        exp: req.body.exp || 0,
-        kills: req.body.kills || 0,
-        damageDealt: req.body.damageDealt || 0
-    });
-
-    try {
-        const newPlayerHero = await playerHero.save();
-        res.status(201).json(newPlayerHero);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
-});
-
-// Update player-hero combination
-router.patch('/', async (req, res) => {
-    try {
-
-        // get player
-        const player = await Player.findOne({playerId:req.body.player})
-        const hero = await Hero.findOne({heroId:req.body.hero})
-
-        if(!player||!hero){
-            return res.status(404).json({ message: 'Player or Hero not found' });
-        }
-
-        const playerHero = await PlayerHero.findOne();
-        if (!playerHero) {
-            return res.status(404).json({ message: 'Player-Hero combination not found' });
-        }
-        
-        // Update fields if provided
-        if (req.body.level) playerHero.level = req.body.level;
-        if (req.body.unlockedAbilityIds) playerHero.unlockedAbilityIds = req.body.unlockedAbilityIds;
-        if (req.body.equippedAbilityIds) playerHero.equippedAbilityIds = req.body.equippedAbilityIds;
-        if (req.body.exp) playerHero.exp = req.body.exp;
-        if (req.body.kills) playerHero.kills = req.body.kills;
-        if (req.body.damageDealt) playerHero.damageDealt = req.body.damageDealt;
-        
-        const updatedPlayerHero = await playerHero.save();
-        res.json(updatedPlayerHero);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
-});
-
-// Delete player-hero combination
-router.delete('/:id', async (req, res) => {
-    try {
-        const playerHero = await PlayerHero.findById(req.params.id);
-        if (!playerHero) {
-            return res.status(404).json({ message: 'Player-Hero combination not found' });
-        }
-        await playerHero.deleteOne();
-        res.json({ message: 'Player-Hero combination deleted' });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
-
-// Get all heroes for a specific player
+// 1. Get all heroes for a player
 router.get('/player/:playerId', async (req, res) => {
     try {
-        const playerHeroes = await PlayerHero.find({ player: req.params.playerId })
-            .populate('hero', 'name');
-        res.json(playerHeroes);
+        const { playerId } = req.params;
+        
+        // First find the player to get their ObjectId
+        const player = await Player.findOne({ playerId });
+        if (!player) {
+            return res.status(404).json({ error: 'Player not found' });
+        }
+
+        const heroes = await PlayerHero.find({ player: player._id });
+        res.json(heroes);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ error: error.message });
     }
 });
 
-// Update hero abilities
-router.patch('/:id/abilities', async (req, res) => {
+// 2. Create a new player hero
+router.post('/', async (req, res) => {
     try {
-        const playerHero = await PlayerHero.findById(req.params.id);
-        if (!playerHero) {
-            return res.status(404).json({ message: 'Player-Hero combination not found' });
+        const { playerId, heroId } = req.body;
+
+        if (!playerId || !heroId) {
+            return res.status(400).json({ error: 'playerId and heroId are required' });
         }
-        
-        if (req.body.unlockedAbilityIds) {
-            playerHero.unlockedAbilityIds = [...new Set([...playerHero.unlockedAbilityIds, ...req.body.unlockedAbilityIds])];
+
+        // Find the player to get their ObjectId
+        const player = await Player.findOne({ playerId });
+        if (!player) {
+            return res.status(404).json({ error: 'Player not found' });
         }
-        if (req.body.equippedAbilityIds) {
-            playerHero.equippedAbilityIds = req.body.equippedAbilityIds;
+
+        // Check if player already has this hero
+        const existingHero = await PlayerHero.findOne({ 
+            player: player._id,
+            heroId 
+        });
+
+        if (existingHero) {
+            return res.status(400).json({ error: 'Player already has this hero' });
         }
-        
-        const updatedPlayerHero = await playerHero.save();
-        res.json(updatedPlayerHero);
+
+        const playerHero = new PlayerHero({
+            heroId,
+            player: player._id
+        });
+
+        await playerHero.save();
+        res.status(201).json(playerHero);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        res.status(500).json({ error: error.message });
     }
 });
 
-// Update hero stats
-router.patch('/:id/stats', async (req, res) => {
+// 3. Update a player hero
+router.patch('/:heroId', async (req, res) => {
     try {
-        const playerHero = await PlayerHero.findById(req.params.id);
-        if (!playerHero) {
-            return res.status(404).json({ message: 'Player-Hero combination not found' });
+        const { heroId } = req.params;
+        const { playerId } = req.body;
+        const updateData = req.body;
+
+        if (!playerId) {
+            return res.status(400).json({ error: 'playerId is required' });
         }
-        
-        if (req.body.exp) playerHero.exp += req.body.exp;
-        if (req.body.kills) playerHero.kills += req.body.kills;
-        if (req.body.damageDealt) playerHero.damageDealt += req.body.damageDealt;
-        
-        const updatedPlayerHero = await playerHero.save();
-        res.json(updatedPlayerHero);
+
+        // Find the player to get their ObjectId
+        const player = await Player.findOne({ playerId });
+        if (!player) {
+            return res.status(404).json({ error: 'Player not found' });
+        }
+
+        // Remove fields that shouldn't be updated
+        delete updateData.playerId;
+        delete updateData.heroId;
+        delete updateData.createdAt;
+
+        const playerHero = await PlayerHero.findOneAndUpdate(
+            { 
+                player: player._id,
+                heroId 
+            },
+            { $set: updateData },
+            { new: true, runValidators: true }
+        );
+
+        if (!playerHero) {
+            return res.status(404).json({ error: 'Player hero not found' });
+        }
+
+        res.json(playerHero);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        res.status(500).json({ error: error.message });
     }
 });
 

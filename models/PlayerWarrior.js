@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
-const playerHeroSchema = new mongoose.Schema({
-    heroId: {
+const playerWarriorSchema = new mongoose.Schema({
+    warriorId: {
         type: String,
         required: true
     },
@@ -32,6 +32,22 @@ const playerHeroSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    isLeader: {
+        type: Boolean,
+        default: false
+    },
+    spawnLocation:{
+        type: {
+            x: Number,
+            y: Number,
+            z: Number
+        },
+        default: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    },
     createdAt: {
         type: Date,
         default: Date.now
@@ -39,6 +55,6 @@ const playerHeroSchema = new mongoose.Schema({
 });
 
 // Compound index to ensure unique player-hero combinations
-playerHeroSchema.index({ player: 1, heroId: 1 }, { unique: true });
+playerWarriorSchema.index({ player: 1, warriorId: 1 }, { unique: true });
 
-module.exports = mongoose.model('PlayerHero', playerHeroSchema); 
+module.exports = mongoose.model('PlayerWarrior', playerWarriorSchema); 

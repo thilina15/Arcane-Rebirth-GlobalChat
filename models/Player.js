@@ -9,7 +9,6 @@ const playerSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
-        trim: true
     },
     rank: {
         type: String,
@@ -17,26 +16,23 @@ const playerSchema = new mongoose.Schema({
     },
     title: {
         type: String,
-        trim: true
+        required: false,
     },
-    guild: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Guild'
+    guildId: {
+        type: String,
+        required: false,
     },
-    avatar: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Avatar'
+    avatarId: {
+        type: String,
+        required: false,
     },
-    frame: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Frame'
+    frameId: {
+        type: String,
+        required: false,
     },
     exp: {
         type: Number,
         default: 0
-    },
-    squadLeader: {
-        type: String,
     },
     createdAt: {
         type: Date,
