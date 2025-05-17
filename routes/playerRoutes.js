@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Player = require('../models/Player');
+const {getHerosForPlayer} = require('../services/gameService');
 
 // 1. get or create player (using playerId and name)
 router.get('/:playerId', async (req, res) => {
@@ -23,7 +24,11 @@ router.get('/:playerId', async (req, res) => {
             await player.save();
         }
 
-        res.json(player);
+        // Fetch heroes for the player
+        const heroes = await getHerosForPlayer(playerId);
+        let details = player.toJSON();
+        details.heroes = heroes;
+        res.json(details);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

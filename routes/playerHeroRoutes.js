@@ -2,20 +2,14 @@ const express = require('express');
 const router = express.Router();
 const PlayerHero = require('../models/PlayerHero');
 const Player = require('../models/Player');
+const { getHerosForPlayer } = require('../services/gameService');
+
 
 // 1. Get all heroes for a player
 router.get('/player/:playerId', async (req, res) => {
     try {
-        const { playerId } = req.params;
-        
-        // First find the player to get their ObjectId
-        const player = await Player.findOne({ playerId });
-        if (!player) {
-            return res.status(404).json({ error: 'Player not found' });
-        }
-
-        const heroes = await PlayerHero.find({ player: player._id });
-        res.json(heroes);
+        const heros = await getHerosForPlayer(req.params.playerId);
+        res.json(heros);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -24,7 +18,7 @@ router.get('/player/:playerId', async (req, res) => {
 // 2. Create a new player hero
 router.post('/', async (req, res) => {
     try {
-        const { playerId, heroId } = req.body;
+        const { playerId, heroId, level, unlockedAbilityIds, equippedAbilityIds } = req.body;
 
         if (!playerId || !heroId) {
             return res.status(400).json({ error: 'playerId and heroId are required' });
@@ -48,7 +42,13 @@ router.post('/', async (req, res) => {
 
         const playerHero = new PlayerHero({
             heroId,
-            player: player._id
+            player: player._id,
+            level: level || 1,
+            unlockedAbilityIds: unlockedAbilityIds || [],
+            equippedAbilityIds: equippedAbilityIds || [],
+            exp: 1,
+            kills: 0,
+            damageDealt: 0,
         });
 
         await playerHero.save();
@@ -99,4 +99,5 @@ router.patch('/:heroId', async (req, res) => {
     }
 });
 
-module.exports = router; 
+module.exports = router
+

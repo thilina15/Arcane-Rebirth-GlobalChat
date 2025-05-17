@@ -24,7 +24,7 @@ app.use(requestLogger);
 
 // Routes
 app.use('/api/players', playerRoutes);
-app.use('/api/heros',playerHeroRoutes)
+app.use('/api/heroes',playerHeroRoutes)
 
 // Basic route
 app.get('/', (req, res) => {

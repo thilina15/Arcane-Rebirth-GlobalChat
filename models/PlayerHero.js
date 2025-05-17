@@ -22,7 +22,7 @@ const playerHeroSchema = new mongoose.Schema({
     }],
     exp: {
         type: Number,
-        default: 0
+        default: 1
     },
     kills: {
         type: Number,

@@ -13,10 +13,12 @@ const playerSchema = new mongoose.Schema({
     rank: {
         type: String,
         required: false,
+        default:"001"
     },
     title: {
         type: String,
         required: false,
+        default:"None"
     },
     guildId: {
         type: String,
@@ -25,10 +27,12 @@ const playerSchema = new mongoose.Schema({
     avatarId: {
         type: String,
         required: false,
+        default:"001"
     },
     frameId: {
         type: String,
         required: false,
+        default:"001"
     },
     exp: {
         type: Number,
