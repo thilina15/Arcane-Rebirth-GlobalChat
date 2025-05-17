@@ -6,6 +6,7 @@ const connectDB = require('./config/db');
 const playerRoutes = require('./routes/playerRoutes');
 const playerHeroRoutes = require('./routes/playerHeroRoutes')
 const WebSocketService = require('./services/websocket');
+const requestLogger = require('./middleware/requestLogger');
 
 const app = express();
 const server = http.createServer(app);
@@ -19,6 +20,7 @@ connectDB();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(requestLogger);
 
 // Routes
 app.use('/api/players', playerRoutes);
