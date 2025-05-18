@@ -4,7 +4,8 @@ const cors = require('cors');
 const http = require('http');
 const connectDB = require('./config/db');
 const playerRoutes = require('./routes/playerRoutes');
-const playerHeroRoutes = require('./routes/playerHeroRoutes')
+const playerHeroRoutes = require('./routes/playerHeroRoutes');
+const foundationRoutes = require('./routes/foundationRoutes');
 const WebSocketService = require('./services/websocket');
 const requestLogger = require('./middleware/requestLogger');
 
@@ -24,7 +25,8 @@ app.use(requestLogger);
 
 // Routes
 app.use('/api/players', playerRoutes);
-app.use('/api/heroes',playerHeroRoutes)
+app.use('/api/heroes', playerHeroRoutes);
+app.use('/api/foundations', foundationRoutes);
 
 // Basic route
 app.get('/', (req, res) => {
