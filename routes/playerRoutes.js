@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Player = require('../models/Player');
-const {getHerosForPlayer} = require('../services/gameService');
+const {getHerosForPlayer, getFoundationsForPlayer} = require('../services/gameService');
 
 // 1. get or create player (using playerId and name)
 router.get('/:playerId', async (req, res) => {
@@ -23,11 +23,16 @@ router.get('/:playerId', async (req, res) => {
             });
             await player.save();
         }
+        let details = player.toJSON();
 
         // Fetch heroes for the player
         const heroes = await getHerosForPlayer(playerId);
-        let details = player.toJSON();
+
+        // fetch foundations for the player
+        const foundations = await getFoundationsForPlayer(playerId)
+        
         details.heroes = heroes;
+        details.foundations = foundations
         res.json(details);
     } catch (error) {
         res.status(500).json({ error: error.message });
