@@ -38,6 +38,14 @@ const playerSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    treeXp: {
+        type: Number,
+        default: 1
+    },
+    treeLevel: {
+        type: Number,
+        default: 1
+    },
     createdAt: {
         type: Date,
         default: Date.now
