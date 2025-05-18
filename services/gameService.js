@@ -24,32 +24,7 @@ const getFoundationsForPlayer = async (playerId) => {
     return foundations;
 };
 
-const createFoundation = async (playerId, foundationId, heroId) => {
-    const player = await Player.findOne({ playerId });
-    if (!player) {
-        throw new Error('Player not found');
-    }
-
-    // Check if foundation already exists for this player
-    const existingFoundation = await Foundation.findOne({ 
-        player: player._id,
-        foundationId 
-    });
-
-    if (existingFoundation) {
-        throw new Error('Foundation already exists for this player');
-    }
-
-    const foundation = new Foundation({
-        player: player._id,
-        foundationId,
-        heroId
-    });
-
-    return await foundation.save();
-};
-
-const updateFoundation = async (playerId, foundationId, updateData) => {
+const updateOrCreateFoundation = async (playerId, foundationId, updateData) => {
     const player = await Player.findOne({ playerId });
     if (!player) {
         throw new Error('Player not found');
@@ -60,17 +35,30 @@ const updateFoundation = async (playerId, foundationId, updateData) => {
     delete updateData.foundationId;
     delete updateData.createdAt;
 
-    const foundation = await Foundation.findOneAndUpdate(
-        { 
-            player: player._id,
-            foundationId 
-        },
-        { $set: updateData },
-        { new: true, runValidators: true }
-    );
+    // Try to find existing foundation
+    let foundation = await Foundation.findOne({ 
+        player: player._id,
+        foundationId 
+    });
 
-    if (!foundation) {
-        throw new Error('Foundation not found');
+    if (foundation) {
+        // Update existing foundation
+        foundation = await Foundation.findOneAndUpdate(
+            { 
+                player: player._id,
+                foundationId 
+            },
+            { $set: updateData },
+            { new: true, runValidators: true }
+        );
+    } else {
+        // Create new foundation
+        foundation = new Foundation({
+            player: player._id,
+            foundationId,
+            ...updateData
+        });
+        await foundation.save();
     }
 
     return foundation;
@@ -79,6 +67,5 @@ const updateFoundation = async (playerId, foundationId, updateData) => {
 module.exports = {
     getHerosForPlayer,
     getFoundationsForPlayer,
-    createFoundation,
-    updateFoundation
+    updateOrCreateFoundation
 };

@@ -35,7 +35,7 @@ router.get('/:playerId', async (req, res) => {
 });
 
 // 2. update player (using playerId) patch method
-router.patch('/:playerId', async (req, res) => {
+router.put('/:playerId', async (req, res) => {
     try {
         const { playerId } = req.params;
         const updateData = req.body;

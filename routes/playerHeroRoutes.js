@@ -59,7 +59,7 @@ router.post('/', async (req, res) => {
 });
 
 // 3. Update a player hero
-router.patch('/:heroId', async (req, res) => {
+router.put('/:heroId', async (req, res) => {
     try {
         const { heroId } = req.params;
         const { playerId } = req.body;
