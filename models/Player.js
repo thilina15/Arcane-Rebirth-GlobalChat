@@ -46,6 +46,17 @@ const playerSchema = new mongoose.Schema({
         type: Number,
         default: 1
     },
+    completedQuests: [{
+        type: String
+    }],
+    acceptedQuest: {
+        type: String,
+        default: "None"
+    },
+    nextQuest: {
+        type: String,
+        default: "None"
+    },
     createdAt: {
         type: Date,
         default: Date.now
