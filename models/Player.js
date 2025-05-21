@@ -51,11 +51,11 @@ const playerSchema = new mongoose.Schema({
     }],
     acceptedQuest: {
         type: String,
-        default: "None"
+        default: ""
     },
     nextQuest: {
         type: String,
-        default: "None"
+        default: "A0001"
     },
     createdAt: {
         type: Date,
