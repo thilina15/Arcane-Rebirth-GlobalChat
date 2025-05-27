@@ -57,6 +57,9 @@ const playerSchema = new mongoose.Schema({
         type: String,
         default: "A0001"
     },
+    lockedFeatures: [{
+        type: String
+    }],
     createdAt: {
         type: Date,
         default: Date.now
