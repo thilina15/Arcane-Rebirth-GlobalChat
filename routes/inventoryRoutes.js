@@ -93,7 +93,7 @@ router.put('/:playerId/items/:itemId', async (req, res) => {
     }
 });
 
-// Remove item from inventory
+// Delete item from inventory
 router.delete('/:playerId/items/:itemId', async (req, res) => {
     try {
         const player = await Player.findOne({ playerId: req.params.playerId });
@@ -101,9 +101,7 @@ router.delete('/:playerId/items/:itemId', async (req, res) => {
             return res.status(404).json({ error: 'Player not found' });
         }
 
-        const { quantity = 1 } = req.query;
         const inventory = await Inventory.findOne({ player: player._id });
-        
         if (!inventory) {
             return res.status(404).json({ error: 'Inventory not found' });
         }
@@ -113,51 +111,36 @@ router.delete('/:playerId/items/:itemId', async (req, res) => {
             return res.status(404).json({ error: 'Item not found in inventory' });
         }
 
-        if (inventory.items[itemIndex].quantity <= quantity) {
-            // Remove item completely if quantity is less than or equal to requested amount
-            inventory.items.splice(itemIndex, 1);
-        } else {
-            // Reduce quantity
-            inventory.items[itemIndex].quantity -= quantity;
-        }
-
-        await inventory.save();
-        res.json(inventory);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Update item in inventory (equip/unequip or change slot)
-router.patch('/:playerId/items/:itemId', async (req, res) => {
-    try {
-        const player = await Player.findOne({ playerId: req.params.playerId });
-        if (!player) {
-            return res.status(404).json({ error: 'Player not found' });
-        }
-
-        const { equipped, slot } = req.body;
-        const inventory = await Inventory.findOne({ player: player._id });
+        // If quantity is specified, reduce it; otherwise remove the item completely
+        const { quantity } = req.query;
         
-        if (!inventory) {
-            return res.status(404).json({ error: 'Inventory not found' });
+        if (quantity) {
+            const reduceAmount = parseInt(quantity);
+            if (isNaN(reduceAmount) || reduceAmount <= 0) {
+                return res.status(400).json({ error: 'Quantity must be a positive number' });
+            }
+
+            if (inventory.items[itemIndex].quantity <= reduceAmount) {
+                // Remove item completely if reducing by equal or more than current quantity
+                inventory.items.splice(itemIndex, 1);
+            } else {
+                // Reduce quantity
+                inventory.items[itemIndex].quantity -= reduceAmount;
+            }
+        } else {
+            // Remove item completely if no quantity specified
+            inventory.items.splice(itemIndex, 1);
         }
 
-        const item = inventory.items.find(item => item.itemId === req.params.itemId);
-        if (!item) {
-            return res.status(404).json({ error: 'Item not found in inventory' });
-        }
-
-        if (equipped !== undefined) item.equipped = equipped;
-        if (slot) item.slot = slot;
-
-        inventory.lastUpdated = new Date();
         await inventory.save();
-
-        res.json(inventory);
+        res.json({
+            message: 'Item updated successfully',
+            inventory
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
+
 
 module.exports = router; 
