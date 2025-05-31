@@ -82,9 +82,28 @@ const deleteFoundation = async (playerId, foundationId) => {
     return foundation;
 };
 
+const deletePlayerHero = async (playerId, heroId) => {
+    const player = await Player.findOne({ playerId });
+    if (!player) {
+        throw new Error('Player not found');
+    }
+
+    const playerHero = await PlayerHero.findOneAndDelete({ 
+        player: player._id,
+        heroId 
+    });
+
+    if (!playerHero) {
+        throw new Error('Player hero not found');
+    }
+
+    return playerHero;
+};
+
 module.exports = {
     getHerosForPlayer,
     getFoundationsForPlayer,
     updateOrCreateFoundation,
-    deleteFoundation
+    deleteFoundation,
+    deletePlayerHero
 };

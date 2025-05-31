@@ -58,7 +58,10 @@ const playerSchema = new mongoose.Schema({
         default: "A0001"
     },
     lockedFeatures: [{
-        type: String
+        type: String,
+        default:[
+            "St_Rit", "Tvl_Realm1", "Tvl_Realm2", "Tvl_Realm3", "Tvl_Realm4"
+        ]
     }],
     createdAt: {
         type: Date,

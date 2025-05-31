@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const PlayerHero = require('../models/PlayerHero');
 const Player = require('../models/Player');
-const { getHerosForPlayer } = require('../services/gameService');
+const { getHerosForPlayer, deletePlayerHero } = require('../services/gameService');
 
 
 // 1. Get all heroes for a player
@@ -95,6 +95,26 @@ router.put('/:heroId', async (req, res) => {
 
         res.json(playerHero);
     } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 4. Delete a player hero
+router.delete('/:heroId', async (req, res) => {
+    try {
+        const { heroId } = req.params;
+        const { playerId } = req.body;
+
+        if (!playerId) {
+            return res.status(400).json({ error: 'playerId is required in request body' });
+        }
+
+        const playerHero = await deletePlayerHero(playerId, heroId);
+        res.json({ message: 'Player hero deleted successfully', playerHero });
+    } catch (error) {
+        if (error.message === 'Player not found' || error.message === 'Player hero not found') {
+            return res.status(404).json({ error: error.message });
+        }
         res.status(500).json({ error: error.message });
     }
 });
