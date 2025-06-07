@@ -7,6 +7,7 @@ const playerRoutes = require('./routes/playerRoutes');
 const playerHeroRoutes = require('./routes/playerHeroRoutes');
 const foundationRoutes = require('./routes/foundationRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
+const buildingRoutes = require('./routes/buildingRoutes');
 const WebSocketService = require('./services/websocket');
 const requestLogger = require('./middleware/requestLogger');
 
@@ -60,6 +61,7 @@ app.use('/api/players', playerRoutes);
 app.use('/api/heroes', playerHeroRoutes);
 app.use('/api/foundations', foundationRoutes);
 app.use('/api/inventory', inventoryRoutes);
+app.use('/api/buildings', buildingRoutes);
 
 // Basic route
 app.get('/', (req, res) => {

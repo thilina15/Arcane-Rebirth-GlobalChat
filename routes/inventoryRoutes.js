@@ -1,29 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const Inventory = require('../models/Inventory');
-const Player = require('../models/Player');
+const { 
+    getInventory, 
+    updateEntireInventory, 
+    updateInventoryItem, 
+    deleteInventoryItem 
+} = require('../services/gameService');
 
 // Get inventory for a player
 router.get('/:playerId', async (req, res) => {
     try {
-        const player = await Player.findOne({ playerId: req.params.playerId });
-        if (!player) {
-            return res.status(404).json({ error: 'Player not found' });
-        }
-
-        let inventory = await Inventory.findOne({ player: player._id });
-        
-        // Create inventory if it doesn't exist
-        if (!inventory) {
-            inventory = new Inventory({
-                player: player._id,
-                items: []
-            });
-            await inventory.save();
-        }
-
+        const inventory = await getInventory(req.params.playerId);
         res.json(inventory);
     } catch (error) {
+        if (error.message === 'Player not found') {
+            return res.status(404).json({ error: error.message });
+        }
         res.status(500).json({ error: error.message });
     }
 });
@@ -31,24 +23,16 @@ router.get('/:playerId', async (req, res) => {
 // Update entire inventory
 router.put('/:playerId', async (req, res) => {
     try {
-        const player = await Player.findOne({ playerId: req.params.playerId });
-        if (!player) {
-            return res.status(404).json({ error: 'Player not found' });
-        }
-
         const { items } = req.body;
-        if (!items) {
-            return res.status(400).json({ error: 'items array is required' });
-        }
-
-        const inventory = await Inventory.findOneAndUpdate(
-            { player: player._id },
-            { $set: { items } },
-            { new: true, runValidators: true, upsert: true }
-        );
-
+        const inventory = await updateEntireInventory(req.params.playerId, items);
         res.json(inventory);
     } catch (error) {
+        if (error.message === 'Player not found') {
+            return res.status(404).json({ error: error.message });
+        }
+        if (error.message === 'items array is required') {
+            return res.status(400).json({ error: error.message });
+        }
         res.status(500).json({ error: error.message });
     }
 });
@@ -56,39 +40,13 @@ router.put('/:playerId', async (req, res) => {
 // Add or update item in inventory
 router.put('/:playerId/items/:itemId', async (req, res) => {
     try {
-        const player = await Player.findOne({ playerId: req.params.playerId });
-        if (!player) {
-            return res.status(404).json({ error: 'Player not found' });
-        }
-
         const { quantity = 1 } = req.body;
-        const itemId = req.params.itemId;
-
-        let inventory = await Inventory.findOne({ player: player._id });
-        if (!inventory) {
-            inventory = new Inventory({
-                player: player._id,
-                items: []
-            });
-        }
-
-        // Check if item already exists
-        const existingItemIndex = inventory.items.findIndex(item => item.itemId === itemId);
-
-        if (existingItemIndex !== -1) {
-            // Update existing item quantity
-            inventory.items[existingItemIndex].quantity = quantity;
-        } else {
-            // Add new item
-            inventory.items.push({
-                itemId,
-                quantity
-            });
-        }
-
-        await inventory.save();
+        const inventory = await updateInventoryItem(req.params.playerId, req.params.itemId, quantity);
         res.json(inventory);
     } catch (error) {
+        if (error.message === 'Player not found') {
+            return res.status(404).json({ error: error.message });
+        }
         res.status(500).json({ error: error.message });
     }
 });
@@ -96,51 +54,27 @@ router.put('/:playerId/items/:itemId', async (req, res) => {
 // Delete item from inventory
 router.delete('/:playerId/items/:itemId', async (req, res) => {
     try {
-        const player = await Player.findOne({ playerId: req.params.playerId });
-        if (!player) {
-            return res.status(404).json({ error: 'Player not found' });
-        }
-
-        const inventory = await Inventory.findOne({ player: player._id });
-        if (!inventory) {
-            return res.status(404).json({ error: 'Inventory not found' });
-        }
-
-        const itemIndex = inventory.items.findIndex(item => item.itemId === req.params.itemId);
-        if (itemIndex === -1) {
-            return res.status(404).json({ error: 'Item not found in inventory' });
-        }
-
-        // If quantity is specified, reduce it; otherwise remove the item completely
         const { quantity } = req.query;
-        
-        if (quantity) {
-            const reduceAmount = parseInt(quantity);
-            if (isNaN(reduceAmount) || reduceAmount <= 0) {
-                return res.status(400).json({ error: 'Quantity must be a positive number' });
-            }
-
-            if (inventory.items[itemIndex].quantity <= reduceAmount) {
-                // Remove item completely if reducing by equal or more than current quantity
-                inventory.items.splice(itemIndex, 1);
-            } else {
-                // Reduce quantity
-                inventory.items[itemIndex].quantity -= reduceAmount;
-            }
-        } else {
-            // Remove item completely if no quantity specified
-            inventory.items.splice(itemIndex, 1);
-        }
-
-        await inventory.save();
+        const inventory = await deleteInventoryItem(req.params.playerId, req.params.itemId, quantity);
         res.json({
             message: 'Item updated successfully',
             inventory
         });
     } catch (error) {
+        if (error.message === 'Player not found') {
+            return res.status(404).json({ error: error.message });
+        }
+        if (error.message === 'Inventory not found') {
+            return res.status(404).json({ error: error.message });
+        }
+        if (error.message === 'Item not found in inventory') {
+            return res.status(404).json({ error: error.message });
+        }
+        if (error.message === 'Quantity must be a positive number') {
+            return res.status(400).json({ error: error.message });
+        }
         res.status(500).json({ error: error.message });
     }
 });
-
 
 module.exports = router; 

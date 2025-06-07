@@ -1,6 +1,8 @@
 const PlayerHero = require('../models/PlayerHero');
 const Player = require('../models/Player');
 const Foundation = require('../models/Foundation');
+const Building = require('../models/building');
+const Inventory = require('../models/Inventory');
 
 const getHerosForPlayer = async (playerId) => {
     // First find the player to get their ObjectId
@@ -100,10 +102,211 @@ const deletePlayerHero = async (playerId, heroId) => {
     return playerHero;
 };
 
+const addOrUpdateBuildings = async (playerId, buildingId, transforms) => {
+    const player = await Player.findOne({ playerId });
+    if (!player) {
+        throw new Error('Player not found');
+    }
+
+    // Try to find existing building
+    let building = await Building.findOne({ 
+        player: player._id,
+        buildingId 
+    });
+
+    if (building) {
+        // Update existing building
+        building = await Building.findOneAndUpdate(
+            { 
+                player: player._id,
+                buildingId 
+            },
+            { $set: { transforms } },
+            { new: true, runValidators: true }
+        );
+    } else {
+        // Create new building
+        building = new Building({
+            player: player._id,
+            buildingId,
+            transforms
+        });
+        await building.save();
+    }
+
+    return building;
+};
+
+const updateInventory = async (playerId, inventoryId, updateData) => {
+    const player = await Player.findOne({ playerId });
+    if (!player) {
+        throw new Error('Player not found');
+    }
+
+    // Remove fields that shouldn't be updated
+    delete updateData.playerId;
+    delete updateData.inventoryId;
+    delete updateData.createdAt;
+
+    // Try to find existing inventory
+    let inventory = await Inventory.findOne({ 
+        player: player._id,
+        inventoryId 
+    });
+
+    if (inventory) {
+        // Update existing inventory
+        inventory = await Inventory.findOneAndUpdate(
+            { 
+                player: player._id,
+                inventoryId 
+            },
+            { $set: updateData },
+            { new: true, runValidators: true }
+        );
+    } else {
+        // Create new inventory
+        inventory = new Inventory({
+            player: player._id,
+            inventoryId,
+            ...updateData
+        });
+        await inventory.save();
+    }
+
+    return inventory;
+};
+
+const getInventory = async (playerId) => {
+    const player = await Player.findOne({ playerId });
+    if (!player) {
+        throw new Error('Player not found');
+    }
+
+    let inventory = await Inventory.findOne({ player: player._id });
+    
+    // Create inventory if it doesn't exist
+    if (!inventory) {
+        inventory = new Inventory({
+            player: player._id,
+            items: []
+        });
+        await inventory.save();
+    }
+
+    return inventory;
+};
+
+const updateEntireInventory = async (playerId, items) => {
+    const player = await Player.findOne({ playerId });
+    if (!player) {
+        throw new Error('Player not found');
+    }
+
+    if (!items) {
+        throw new Error('items array is required');
+    }
+
+    const inventory = await Inventory.findOneAndUpdate(
+        { player: player._id },
+        { $set: { items } },
+        { new: true, runValidators: true, upsert: true }
+    );
+
+    return inventory;
+};
+
+const updateInventoryItem = async (playerId, itemId, quantity = 1) => {
+    const player = await Player.findOne({ playerId });
+    if (!player) {
+        throw new Error('Player not found');
+    }
+
+    let inventory = await Inventory.findOne({ player: player._id });
+    if (!inventory) {
+        inventory = new Inventory({
+            player: player._id,
+            items: []
+        });
+    }
+
+    // Check if item already exists
+    const existingItemIndex = inventory.items.findIndex(item => item.itemId === itemId);
+
+    if (existingItemIndex !== -1) {
+        // Update existing item quantity
+        inventory.items[existingItemIndex].quantity = quantity;
+    } else {
+        // Add new item
+        inventory.items.push({
+            itemId,
+            quantity
+        });
+    }
+
+    await inventory.save();
+    return inventory;
+};
+
+const deleteInventoryItem = async (playerId, itemId, quantity) => {
+    const player = await Player.findOne({ playerId });
+    if (!player) {
+        throw new Error('Player not found');
+    }
+
+    const inventory = await Inventory.findOne({ player: player._id });
+    if (!inventory) {
+        throw new Error('Inventory not found');
+    }
+
+    const itemIndex = inventory.items.findIndex(item => item.itemId === itemId);
+    if (itemIndex === -1) {
+        throw new Error('Item not found in inventory');
+    }
+
+    if (quantity) {
+        const reduceAmount = parseInt(quantity);
+        if (isNaN(reduceAmount) || reduceAmount <= 0) {
+            throw new Error('Quantity must be a positive number');
+        }
+
+        if (inventory.items[itemIndex].quantity <= reduceAmount) {
+            // Remove item completely if reducing by equal or more than current quantity
+            inventory.items.splice(itemIndex, 1);
+        } else {
+            // Reduce quantity
+            inventory.items[itemIndex].quantity -= reduceAmount;
+        }
+    } else {
+        // Remove item completely if no quantity specified
+        inventory.items.splice(itemIndex, 1);
+    }
+
+    await inventory.save();
+    return inventory;
+};
+
+const getBuildingsForPlayer = async (playerId) => {
+    const player = await Player.findOne({ playerId });
+    if (!player) {
+        throw new Error('Player not found');
+    }
+
+    const buildings = await Building.find({ player: player._id });
+    return buildings;
+};
+
 module.exports = {
     getHerosForPlayer,
     getFoundationsForPlayer,
     updateOrCreateFoundation,
     deleteFoundation,
-    deletePlayerHero
+    deletePlayerHero,
+    addOrUpdateBuildings,
+    updateInventory,
+    getInventory,
+    updateEntireInventory,
+    updateInventoryItem,
+    deleteInventoryItem,
+    getBuildingsForPlayer
 };
