@@ -10,17 +10,33 @@ const buildingSchema = new mongoose.Schema({
         type: String,
     },
     transforms: [{
-        x: {
-            type: Number,
-            default: 0
+        location: {
+            x: {
+                type: Number,
+                default: 0
+            },
+            y: {
+                type: Number,
+                default: 0
+            },
+            z: {
+                type: Number,
+                default: 0
+            }
         },
-        y: {
-            type: Number,
-            default: 0
-        },
-        z: {
-            type: Number,
-            default: 0
+        rotation: {
+            x: {
+                type: Number,
+                default: 0
+            },
+            y: {
+                type: Number,
+                default: 0
+            },
+            z: {
+                type: Number,
+                default: 0
+            }
         }
     }],
     createdAt: {
