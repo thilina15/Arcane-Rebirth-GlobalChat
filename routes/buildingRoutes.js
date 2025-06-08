@@ -7,7 +7,7 @@ router.get('/player/:playerId', async (req, res) => {
     try {
         const { playerId } = req.params;
         const buildings = await getBuildingsForPlayer(playerId);
-        res.json(buildings);
+        res.json({buildings:buildings});
     } catch (error) {
         if (error.message === 'Player not found') {
             return res.status(404).json({ error: error.message });
