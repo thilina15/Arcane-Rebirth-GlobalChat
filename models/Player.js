@@ -57,12 +57,12 @@ const playerSchema = new mongoose.Schema({
         type: String,
         default: "A0001"
     },
-    lockedFeatures: [{
-        type: String,
-        default:[
-            "St_Rit", "Tvl_Realm1", "Tvl_Realm2", "Tvl_Realm3", "Tvl_Realm4"
-        ]
-    }],
+    lockedFeatures: {
+        type: [String],
+        default: function() {
+            return ["St_Rit", "Tvl_Realm1", "Tvl_Realm2", "Tvl_Realm3", "Tvl_Realm4"];
+        }
+    },
     createdAt: {
         type: Date,
         default: Date.now
