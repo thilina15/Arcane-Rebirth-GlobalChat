@@ -3,6 +3,7 @@ const Player = require('../models/Player');
 const Foundation = require('../models/Foundation');
 const Building = require('../models/building');
 const Inventory = require('../models/Inventory');
+const Worker = require('../models/Worker');
 
 const getHerosForPlayer = async (playerId) => {
     // First find the player to get their ObjectId
@@ -296,6 +297,74 @@ const getBuildingsForPlayer = async (playerId) => {
     return buildings;
 };
 
+const getWorkersForPlayer = async (playerId) => {
+    const player = await Player.findOne({ playerId });
+    if (!player) {
+        throw new Error('Player not found');
+    }
+
+    const workers = await Worker.find({ player: player._id });
+    return workers
+};
+
+const updateOrCreateWorker = async (playerId, workerId, updateData) => {
+    const player = await Player.findOne({ playerId });
+    if (!player) {
+        throw new Error('Player not found');
+    }
+
+    // Remove fields that shouldn't be updated
+    delete updateData.playerId;
+    delete updateData.workerId;
+    delete updateData.createdAt;
+
+    // Try to find existing worker
+    let worker = await Worker.findOne({ 
+        player: player._id,
+        workerId 
+    });
+
+    if (worker) {
+        // Update existing worker
+        worker = await Worker.findOneAndUpdate(
+            { 
+                player: player._id,
+                workerId 
+            },
+            { $set: updateData },
+            { new: true, runValidators: true }
+        );
+    } else {
+        // Create new worker
+        worker = new Worker({
+            player: player._id,
+            workerId,
+            ...updateData
+        });
+        await worker.save();
+    }
+
+    return worker;
+};
+
+const deleteWorker = async (playerId, workerId) => {
+    const player = await Player.findOne({ playerId });
+    if (!player) {
+        throw new Error('Player not found');
+    }
+
+    const worker = await Worker.findOneAndDelete({ 
+        player: player._id,
+        workerId 
+    });
+
+    if (!worker) {
+        throw new Error('Worker not found');
+    }
+
+    return worker;
+};
+
 module.exports = {
     getHerosForPlayer,
     getFoundationsForPlayer,
@@ -308,5 +377,8 @@ module.exports = {
     updateEntireInventory,
     updateInventoryItem,
     deleteInventoryItem,
-    getBuildingsForPlayer
+    getBuildingsForPlayer,
+    getWorkersForPlayer,
+    updateOrCreateWorker,
+    deleteWorker
 };

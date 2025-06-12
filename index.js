@@ -10,6 +10,7 @@ const inventoryRoutes = require('./routes/inventoryRoutes');
 const buildingRoutes = require('./routes/buildingRoutes');
 const WebSocketService = require('./services/websocket');
 const requestLogger = require('./middleware/requestLogger');
+const workerRoutes = require('./routes/workerRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -62,6 +63,7 @@ app.use('/api/heroes', playerHeroRoutes);
 app.use('/api/foundations', foundationRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/buildings', buildingRoutes);
+app.use('/api/workers', workerRoutes);
 
 // Basic route
 app.get('/', (req, res) => {
