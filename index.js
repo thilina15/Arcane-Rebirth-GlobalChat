@@ -12,6 +12,7 @@ const WebSocketService = require('./services/websocket');
 const requestLogger = require('./middleware/requestLogger');
 const workerRoutes = require('./routes/workerRoutes');
 const raidRoutes = require('./routes/raid');
+const playerWarriorRoutes = require('./routes/playerWarrior');
 
 const app = express();
 const server = http.createServer(app);
@@ -66,6 +67,7 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/buildings', buildingRoutes);
 app.use('/api/workers', workerRoutes);
 app.use('/api/raid', raidRoutes);
+app.use('/api/warriors', playerWarriorRoutes);
 
 // Basic route
 app.get('/', (req, res) => {

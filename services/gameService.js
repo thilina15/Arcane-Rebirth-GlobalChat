@@ -4,6 +4,7 @@ const Foundation = require('../models/Foundation');
 const Building = require('../models/building');
 const Inventory = require('../models/Inventory');
 const Worker = require('../models/Worker');
+const PlayerWarrior = require('../models/PlayerWarrior');
 
 const getHerosForPlayer = async (playerId) => {
     // First find the player to get their ObjectId
@@ -365,6 +366,57 @@ const deleteWorker = async (playerId, workerId) => {
     return worker;
 };
 
+const getWarriorsForPlayer = async (playerId) => {
+    // First find the player to get their ObjectId
+    const player = await Player.findOne({ playerId });
+    if (!player) {
+        throw new Error('Player not found');
+    }
+
+    const warriors = await PlayerWarrior.find({ player: player._id });
+    return warriors;
+};
+
+const addOrUpdatePlayerWarrior = async (playerId, warriorId, updateData) => {
+    const player = await Player.findOne({ playerId });
+    if (!player) {
+        throw new Error('Player not found');
+    }
+
+    // Remove fields that shouldn't be updated
+    delete updateData.playerId;
+    delete updateData.warriorId;
+    delete updateData.createdAt;
+
+    // Try to find existing warrior
+    let playerWarrior = await PlayerWarrior.findOne({ 
+        player: player._id,
+        warriorId 
+    });
+
+    if (playerWarrior) {
+        // Update existing warrior
+        playerWarrior = await PlayerWarrior.findOneAndUpdate(
+            { 
+                player: player._id,
+                warriorId 
+            },
+            { $set: updateData },
+            { new: true, runValidators: true }
+        );
+    } else {
+        // Create new warrior
+        playerWarrior = new PlayerWarrior({
+            player: player._id,
+            warriorId,
+            ...updateData
+        });
+        await playerWarrior.save();
+    }
+
+    return playerWarrior;
+};
+
 module.exports = {
     getHerosForPlayer,
     getFoundationsForPlayer,
@@ -380,5 +432,7 @@ module.exports = {
     getBuildingsForPlayer,
     getWorkersForPlayer,
     updateOrCreateWorker,
-    deleteWorker
+    deleteWorker,
+    addOrUpdatePlayerWarrior,
+    getWarriorsForPlayer
 };
