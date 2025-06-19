@@ -8,7 +8,7 @@ const { addOrUpdatePlayerWarrior, getWarriorsForPlayer } = require('../services/
 router.get('/player/:playerId', async (req, res) => {
     try {
         const warriors = await getWarriorsForPlayer(req.params.playerId);
-        res.json(warriors);
+        res.json({warriors: warriors});
     } catch (error) {
         if (error.message === 'Player not found') {
             return res.status(404).json({ error: error.message });
