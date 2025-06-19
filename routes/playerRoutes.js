@@ -65,4 +65,17 @@ router.put('/:playerId', async (req, res) => {
     }
 });
 
+// 3. get leaderboard based on treeLevel (top 10 players)
+router.get('/leaderboard/tree-level', async (req, res) => {
+    try {
+        const topPlayers = await Player.find({})
+            .sort({ treeLevel: -1 })
+            .limit(10)
+            .lean();
+        res.json(topPlayers);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router; 
