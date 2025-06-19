@@ -10,27 +10,17 @@ const playerWarriorSchema = new mongoose.Schema({
         ref: 'Player',
         required: true
     },
-    level: {
-        type: Number,
-        default: 1
+    runeSlot: {
+        type: String,
+        default: "None"
     },
-    unlockedAbilityIds: [{
-        type: String
-    }],
-    equippedAbilityIds: [{
-        type: String
-    }],
-    exp: {
-        type: Number,
-        default: 0
+    weaponSlot: {
+        type: String,
+        default: "None"
     },
-    kills: {
-        type: Number,
-        default: 0
-    },
-    damageDealt: {
-        type: Number,
-        default: 0
+    armorSlot: {
+        type: String,
+        default: "None"
     },
     isLeader: {
         type: Boolean,
