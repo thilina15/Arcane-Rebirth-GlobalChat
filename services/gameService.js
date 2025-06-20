@@ -404,6 +404,8 @@ const addOrUpdatePlayerWarrior = async (playerId, warriorId, updateData) => {
             { $set: updateData },
             { new: true, runValidators: true }
         );
+
+        
     } else {
         // Create new warrior
         playerWarrior = new PlayerWarrior({
@@ -412,6 +414,12 @@ const addOrUpdatePlayerWarrior = async (playerId, warriorId, updateData) => {
             ...updateData
         });
         await playerWarrior.save();
+    }
+
+    // check if isLeader is true
+    if (updateData.isLeader) {
+        // update all other warriors to be not leader
+        await PlayerWarrior.updateMany({ player: player._id , warriorId: { $ne: warriorId } }, { $set: { isLeader: false } });
     }
 
     return playerWarrior;

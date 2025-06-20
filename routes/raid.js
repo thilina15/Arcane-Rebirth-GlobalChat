@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getBuildingsForPlayer, getFoundationsForPlayer } = require('../services/gameService');
+const { getBuildingsForPlayer, getFoundationsForPlayer, getHerosForPlayer } = require('../services/gameService');
 const Player = require('../models/Player');
 
 // Get all buildings for a player
@@ -17,11 +17,15 @@ router.get('/random', async (req, res) => {
         // get foundations for random player
         const foundations = await getFoundationsForPlayer(randomPlayer.playerId);
 
+        //get player heroes
+        const heroes = await getHerosForPlayer(randomPlayer.playerId);
+
         // make response
         const response = {
             player: randomPlayer.toJSON(),
             buildings: buildings,
-            foundations: foundations
+            foundations: foundations,
+            heroes: heroes
         };
         res.json(response);
 
